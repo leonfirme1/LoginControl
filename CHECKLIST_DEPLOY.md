@@ -1,8 +1,15 @@
-# ✅ Checklist Deploy Railway
+# ✅ Checklist Deploy Railway - VERSÃO CORRIGIDA
+
+## ⚠️ IMPORTANTE: Erro Node.js 18 Corrigido
+O projeto agora usa um servidor compatível que resolve o erro anterior.
 
 ## 1. Preparar Git (5 min)
 - [ ] Código no GitHub/GitLab
 - [ ] Repositório público ou privado autorizado
+- [ ] **Certifique-se de incluir os novos arquivos:**
+  - [ ] `server/index-simple.ts`
+  - [ ] `build-simple.js` 
+  - [ ] `railway.toml` atualizado
 
 ## 2. Railway - Criar Projeto (2 min)
 - [ ] Acessar https://railway.app
@@ -17,12 +24,14 @@
 - [ ] `NODE_ENV` = `production`
 
 ## 4. Aguardar Deploy (5-10 min)
-- [ ] Railway fará build automático
+- [ ] Railway executará `node build-simple.js`
 - [ ] Verificar logs na aba "Deployments"
+- [ ] Procurar por: "🚀 Server running on port..."
 - [ ] Status deve ficar "Success"
 
 ## 5. Testar (2 min)
 - [ ] Acessar URL fornecida pelo Railway
+- [ ] Testar health check: `https://sua-url.railway.app/ping`
 - [ ] Fazer login: usuário `1`, senha `1`
 - [ ] Verificar se redireciona para "Boas Vindas"
 

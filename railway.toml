@@ -3,7 +3,7 @@ builder = "NIXPACKS"
 buildCommand = "node build-simple.js"
 
 [deploy]
-startCommand = "NODE_ENV=production node dist/index-simple.js"
+startCommand = "NODE_ENV=production node dist/index.js"
 healthcheckPath = "/ping"
 healthcheckTimeout = 600
 healthcheckInterval = 60

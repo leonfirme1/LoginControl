@@ -36,15 +36,43 @@ app.use((req, res, next) => {
 
   // Serve static files in production
   if (process.env.NODE_ENV === "production") {
-    const distPath = path.resolve(__dirname, "../public");
-    console.log(`[STATIC] Serving static files from: ${distPath}`);
-    
-    app.use(express.static(distPath));
-    
-    // Fallback to index.html for SPA routing
-    app.use("*", (_req, res) => {
-      res.sendFile(path.resolve(distPath, "index.html"));
-    });
+    try {
+      // Try multiple possible static file locations
+      const possiblePaths = [
+        path.resolve(__dirname, "../public"),
+        path.resolve(__dirname, "public"),
+        path.resolve(__dirname, "../dist/public"),
+        path.resolve(process.cwd(), "dist/public"),
+        path.resolve(process.cwd(), "public")
+      ];
+      
+      let distPath = null;
+      for (const testPath of possiblePaths) {
+        if (require('fs').existsSync(testPath)) {
+          distPath = testPath;
+          break;
+        }
+      }
+      
+      if (distPath) {
+        console.log(`[STATIC] Serving static files from: ${distPath}`);
+        app.use(express.static(distPath));
+        
+        // Fallback to index.html for SPA routing
+        app.use("*", (_req, res) => {
+          const indexPath = path.resolve(distPath, "index.html");
+          if (require('fs').existsSync(indexPath)) {
+            res.sendFile(indexPath);
+          } else {
+            res.status(404).send('File not found');
+          }
+        });
+      } else {
+        console.log("[STATIC] No static files directory found, serving API only");
+      }
+    } catch (error) {
+      console.error("[STATIC] Error setting up static files:", error);
+    }
   }
 
   // Use PORT from environment (Railway) or default to 5000 (development)

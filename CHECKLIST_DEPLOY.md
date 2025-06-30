@@ -29,9 +29,30 @@
 ---
 
 ## ⚠️ Se der erro "Healthcheck failed":
-1. Verifique se as variáveis `PGUSER` e `PGPASSWORD` estão corretas
-2. Teste endpoint: `https://sua-url.railway.app/health`
-3. Veja logs detalhados no Railway
+
+### Opção 1: Desabilitar healthcheck temporariamente
+No Railway, vá em Settings e adicione:
+```
+RAILWAY_HEALTHCHECK_TIMEOUT_SEC=0
+```
+
+### Opção 2: Alterar configuração Railway
+Edite o `railway.toml` e mude:
+```toml
+healthcheckPath = "/"
+```
+
+### Opção 3: Verificar logs
+1. Veja logs no Railway em "Deployments"
+2. Procure por mensagens como "Server running on port..."
+3. Teste manualmente: `https://sua-url.railway.app/ping`
+
+### Opção 4: Usar ROOT path
+No railway.toml, mude para:
+```toml
+healthcheckPath = "/"
+healthcheckTimeout = 600
+```
 
 ## 📋 Informações do Banco:
 - **Host**: `controlehoras-db.c8pqeqc0u2u5.us-east-1.rds.amazonaws.com`

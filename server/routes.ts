@@ -4,14 +4,37 @@ import { setupAuth } from "./auth";
 import { db } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Simple health check endpoint for Railway (no database dependency)
+  // Ultra simple health check for Railway - just returns OK
   app.get("/health", (req, res) => {
-    res.status(200).json({ 
+    console.log(`[HEALTH] Health check requested from ${req.ip || req.connection.remoteAddress}`);
+    res.status(200).send('OK');
+  });
+
+  // Alternative health check endpoints
+  app.get("/", (req, res) => {
+    console.log(`[ROOT] Root path accessed`);
+    res.status(200).send('Sistema de Login - OK');
+  });
+
+  app.get("/ping", (req, res) => {
+    console.log(`[PING] Ping endpoint accessed`);
+    res.status(200).send('pong');
+  });
+
+  // Detailed health check endpoint  
+  app.get("/health/json", (req, res) => {
+    console.log(`[HEALTH] Detailed health check requested`);
+    const response = {
       status: "ok", 
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || "development",
-      port: process.env.PORT || "5000"
-    });
+      port: process.env.PORT || "5000",
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: "1.0.0"
+    };
+    console.log(`[HEALTH] Responding with:`, response);
+    res.status(200).json(response);
   });
 
   // Detailed health check with database test

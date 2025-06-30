@@ -58,8 +58,12 @@ app.use((req, res, next) => {
 
   // Use PORT from environment (Railway) or default to 5000 (development)
   const port = parseInt(process.env.PORT || "5000", 10);
+  const host = "0.0.0.0"; // Always bind to 0.0.0.0 for production compatibility
   
-  server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
+  server.listen(port, host, () => {
+    log(`🚀 Server running on port ${port} (host: ${host})`);
+    console.log(`📊 Health check: http://${host}:${port}/ping`);
+    console.log(`🏥 Alt health: http://${host}:${port}/health`);
+    console.log(`🌐 Environment: ${process.env.NODE_ENV || "development"}`);
   });
 })();

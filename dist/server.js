@@ -19,9 +19,13 @@ const pool = new Pool({
   ssl: {
     rejectUnauthorized: false
   },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  max: 5,
+  idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 3000,
+  // Força sempre buscar dados atualizados
+  allowExitOnIdle: true,
+  statement_timeout: 5000,
+  query_timeout: 5000
 });
 
 // Função para verificar conexão com banco
@@ -38,24 +42,48 @@ async function testDatabaseConnection() {
   }
 }
 
-// Função para buscar usuário no banco
+// Função para buscar usuário no banco - sempre dados atualizados
 async function getUserFromDatabase(username, password) {
+  let client;
   try {
-    const client = await pool.connect();
+    // Nova conexão a cada consulta para dados frescos
+    client = await pool.connect();
+    
+    // Força transação para dados mais recentes
+    await client.query('BEGIN');
     const query = 'SELECT id, name FROM consultants WHERE name = $1 AND password = $2';
     const result = await client.query(query, [username, password]);
-    client.release();
+    await client.query('COMMIT');
     
     if (result.rows.length > 0) {
       console.log('✅ Usuário autenticado:', result.rows[0]);
       return result.rows[0];
     } else {
       console.log('❌ Credenciais inválidas para usuário:', username);
+      
+      // Debug: mostra todos os usuários disponíveis
+      const allUsers = await client.query('SELECT id, name FROM consultants ORDER BY id');
+      console.log('📋 Total usuários disponíveis:', allUsers.rows.length);
+      allUsers.rows.forEach(user => {
+        console.log(`   - ID: ${user.id}, Nome: ${user.name}`);
+      });
+      
       return null;
     }
   } catch (error) {
     console.error('❌ Erro consulta banco:', error.message);
+    if (client) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.error('Erro no rollback:', rollbackError);
+      }
+    }
     throw error;
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
 

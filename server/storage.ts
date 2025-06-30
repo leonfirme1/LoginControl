@@ -32,13 +32,39 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<Consultant | undefined> {
     console.log(`[STORAGE] Buscando usuário: ${username}`);
+    
+    // Força nova conexão para dados sempre atualizados
+    const client = await pool.connect();
     try {
-      const [user] = await db.select().from(consultants).where(eq(consultants.name, username));
-      console.log(`[STORAGE] Resultado da busca:`, user || 'Nenhum usuário encontrado');
-      return user || undefined;
+      await client.query('BEGIN');
+      const result = await client.query(
+        'SELECT id, name, password FROM consultants WHERE name = $1',
+        [username]
+      );
+      await client.query('COMMIT');
+      
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        console.log(`[STORAGE] Usuário encontrado:`, { id: user.id, name: user.name });
+        return {
+          id: user.id,
+          name: user.name,
+          password: user.password
+        };
+      }
+      
+      // Debug: lista todos os usuários disponíveis
+      const allUsers = await client.query('SELECT id, name FROM consultants ORDER BY id');
+      console.log(`[STORAGE] Total usuários na base: ${allUsers.rows.length}`);
+      allUsers.rows.forEach(u => console.log(`  - ${u.id}: ${u.name}`));
+      
+      return undefined;
     } catch (error) {
+      await client.query('ROLLBACK');
       console.error(`[STORAGE] Erro ao buscar usuário:`, error);
       throw error;
+    } finally {
+      client.release();
     }
   }
 

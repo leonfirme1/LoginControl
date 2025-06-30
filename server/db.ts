@@ -31,6 +31,13 @@ const sslConfig = process.env.NODE_ENV === 'production'
 
 export const pool = new Pool({ 
   connectionString: databaseUrl,
-  ssl: sslConfig
+  ssl: sslConfig,
+  // Configurações otimizadas para dados sempre atualizados
+  max: 5,
+  idleTimeoutMillis: 3000,
+  connectionTimeoutMillis: 2000,
+  allowExitOnIdle: true,
+  statement_timeout: 5000,
+  query_timeout: 5000
 });
 export const db = drizzle(pool, { schema });

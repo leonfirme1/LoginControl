@@ -1,14 +1,14 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "node build-simple.js"
+buildCommand = "cp server/railway-server.js dist/server.js && echo 'Server copied successfully'"
 
 [deploy]
-startCommand = "NODE_ENV=production node dist/index.js"
+startCommand = "NODE_ENV=production node dist/server.js"
 healthcheckPath = "/ping"
-healthcheckTimeout = 600
-healthcheckInterval = 60
+healthcheckTimeout = 300
+healthcheckInterval = 30
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 2
+restartPolicyMaxRetries = 3
 
 [variables]
 NODE_ENV = "production"

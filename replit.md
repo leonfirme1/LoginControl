@@ -123,6 +123,9 @@ NODE_ENV=production|development
   - Railway configurado para usar servidor compatível com Node.js 18
   - **DEPLOY REALIZADO**: Sistema publicado em https://logincontrol-production.up.railway.app
   - Interface de login HTML integrada ao servidor principal
+  - **AUTENTICAÇÃO REAL**: Login integrado com PostgreSQL AWS RDS
+  - Conexão com tabela "consultants" funcionando
+  - Validação de credenciais direto no banco de dados
 
 ## Deployment Configuration
 - **Target Platform**: Railway

@@ -4,8 +4,60 @@ import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import pkg from 'pg';
 
+const { Pool } = pkg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Configuração do banco PostgreSQL AWS RDS
+const pool = new Pool({
+  host: process.env.PGHOST || 'controlehoras-db.c8pqeqc0u2u5.us-east-1.rds.amazonaws.com',
+  port: process.env.PGPORT || 5432,
+  database: process.env.PGDATABASE || 'controlehoras',
+  user: process.env.PGUSER || 'postgres',
+  password: process.env.PGPASSWORD,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Função para verificar conexão com banco
+async function testDatabaseConnection() {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT NOW()');
+    client.release();
+    console.log('✅ Conexão PostgreSQL AWS estabelecida:', result.rows[0]);
+    return true;
+  } catch (error) {
+    console.error('❌ Erro conexão PostgreSQL:', error.message);
+    return false;
+  }
+}
+
+// Função para buscar usuário no banco
+async function getUserFromDatabase(username, password) {
+  try {
+    const client = await pool.connect();
+    const query = 'SELECT id, name FROM consultants WHERE name = $1 AND password = $2';
+    const result = await client.query(query, [username, password]);
+    client.release();
+    
+    if (result.rows.length > 0) {
+      console.log('✅ Usuário autenticado:', result.rows[0]);
+      return result.rows[0];
+    } else {
+      console.log('❌ Credenciais inválidas para usuário:', username);
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Erro consulta banco:', error.message);
+    throw error;
+  }
+}
 
 // Configuração básica
 const app = express();
@@ -31,13 +83,23 @@ app.get('/ping', (req, res) => {
   });
 });
 
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'healthy', 
-    database: 'available',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const dbConnected = await testDatabaseConnection();
+    res.status(200).json({ 
+      status: 'healthy', 
+      database: dbConnected ? 'connected' : 'disconnected',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(503).json({ 
+      status: 'unhealthy', 
+      database: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Root endpoint - Interface de Login
@@ -137,11 +199,11 @@ app.get('/', (req, res) => {
         <form id="loginForm">
             <div class="form-group">
                 <label for="username">Usuário:</label>
-                <input type="text" id="username" name="username" value="1" required>
+                <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
             </div>
             <div class="form-group">
                 <label for="password">Senha:</label>
-                <input type="password" id="password" name="password" value="1" required>
+                <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
             </div>
             <button type="submit" id="loginBtn">Entrar</button>
         </form>
@@ -196,20 +258,32 @@ app.get('/', (req, res) => {
 </html>`);
 });
 
-// Endpoints de API básicos (temporários para teste)
-app.post('/api/login', (req, res) => {
-  console.log('Login attempt:', req.body);
+// Endpoint de login com autenticação PostgreSQL real
+app.post('/api/login', async (req, res) => {
+  console.log('🔐 Tentativa de login:', req.body);
   const { name, password } = req.body;
   
-  // Teste básico
-  if (name === '1' && password === '1') {
-    res.json({ 
-      id: 1, 
-      name: '1',
-      message: 'Login successful' 
-    });
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' });
+  if (!name || !password) {
+    return res.status(400).json({ message: 'Usuário e senha são obrigatórios' });
+  }
+  
+  try {
+    const user = await getUserFromDatabase(name, password);
+    
+    if (user) {
+      console.log('✅ Login bem-sucedido para usuário:', user.name);
+      res.json({ 
+        id: user.id, 
+        name: user.name,
+        message: 'Login realizado com sucesso!'
+      });
+    } else {
+      console.log('❌ Credenciais inválidas para:', name);
+      res.status(401).json({ message: 'Usuário ou senha incorretos' });
+    }
+  } catch (error) {
+    console.error('❌ Erro no login:', error.message);
+    res.status(500).json({ message: 'Erro interno do servidor' });
   }
 });
 
@@ -331,11 +405,20 @@ app.use((err, req, res, next) => {
 // Start server
 const server = createServer(app);
 
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Railway Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`💚 Health checks: /ping, /health, /`);
-  console.log(`🔧 Test login: usuário "1", senha "1"`);
+  
+  // Testar conexão PostgreSQL na inicialização
+  const dbConnected = await testDatabaseConnection();
+  if (dbConnected) {
+    console.log(`🗄️ Database: PostgreSQL AWS RDS conectado`);
+    console.log(`🔐 Autenticação: Tabela 'consultants' disponível`);
+  } else {
+    console.log(`❌ Aviso: Falha na conexão com PostgreSQL`);
+    console.log(`📋 Configure as variáveis: PGUSER, PGPASSWORD`);
+  }
 });
 
 // Graceful shutdown

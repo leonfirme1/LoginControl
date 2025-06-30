@@ -118,6 +118,9 @@ NODE_ENV=production|development
   - Suporte a senhas em texto plano (compatibilidade com dados existentes)
   - Login funcionando corretamente via API e interface web
   - Porta configurada dinamicamente para Railway (process.env.PORT)
+  - **CORREÇÃO CRITICAL**: Erro Node.js 18 corrigido - criado servidor compatível
+  - Build alternativo implementado (build-simple.js + index-simple.ts)
+  - Railway configurado para usar servidor compatível com Node.js 18
 
 ## Deployment Configuration
 - **Target Platform**: Railway

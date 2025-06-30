@@ -24,10 +24,8 @@ const getDatabaseUrl = () => {
 const databaseUrl = getDatabaseUrl();
 console.log('[DB] Database URL configurada:', databaseUrl.replace(/:[^:@]*@/, ':***@'));
 
-// Configure SSL based on environment
-const sslConfig = process.env.NODE_ENV === 'production' 
-  ? { rejectUnauthorized: false } // For Railway/production with self-signed certs
-  : false; // For development
+// Configure SSL - sempre necessário para AWS RDS
+const sslConfig = { rejectUnauthorized: false }; // Para AWS RDS com SSL
 
 export const pool = new Pool({ 
   connectionString: databaseUrl,

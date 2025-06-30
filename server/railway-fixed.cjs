@@ -84,13 +84,13 @@ app.get('/health', (req, res) => {
 // Endpoint de login
 app.post('/api/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { name, password } = req.body;
     
-    if (!username || !password) {
+    if (!name || !password) {
       return res.status(400).json({ error: 'Dados obrigatórios' });
     }
     
-    const user = await getUserFromDatabase(username, password);
+    const user = await getUserFromDatabase(name, password);
     
     if (user) {
       res.json({ 

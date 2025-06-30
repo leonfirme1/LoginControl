@@ -130,6 +130,11 @@ NODE_ENV=production|development
   - Corrigido problema de ES modules conflitantes
   - Sistema sempre busca dados atualizados do PostgreSQL
   - 3 usuários cadastrados: "1"/"12345", "leon"/"teste", "leo"/"teste1"
+  - **CORREÇÃO SSL ERRO 400**: SSL habilitado para desenvolvimento e produção
+  - API corrigida para aceitar campo "name" em vez de "username"
+  - Erro "Dados obrigatórios" resolvido completamente
+  - Toaster reativado para notificações funcionarem
+  - Sistema 100% funcional pronto para deploy
 
 ## Deployment Configuration
 - **Target Platform**: Railway

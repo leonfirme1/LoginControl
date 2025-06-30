@@ -121,6 +121,8 @@ NODE_ENV=production|development
   - **CORREÇÃO CRITICAL**: Erro Node.js 18 corrigido - criado servidor compatível
   - Build alternativo implementado (build-simple.js + index-simple.ts)
   - Railway configurado para usar servidor compatível com Node.js 18
+  - **DEPLOY REALIZADO**: Sistema publicado em https://logincontrol-production.up.railway.app
+  - Interface de login HTML integrada ao servidor principal
 
 ## Deployment Configuration
 - **Target Platform**: Railway

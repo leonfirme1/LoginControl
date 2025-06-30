@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "npm install && npx vite build && mkdir -p dist && cp server/railway-fixed.cjs dist/server.cjs && cp -r dist/public dist/ && echo 'Railway build complete'"
+buildCommand = "npm install && npx vite build && cp server/railway-fixed.cjs dist/server.cjs && echo 'Railway build complete'"
 
 [deploy]
 startCommand = "NODE_ENV=production node dist/server.cjs"

@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "cp server/railway-server.js dist/server.js && echo 'Server copied successfully'"
+buildCommand = "mkdir -p dist && cp server/railway-server.js dist/server.js && echo 'ES Module server ready for Railway'"
 
 [deploy]
 startCommand = "NODE_ENV=production node dist/server.js"

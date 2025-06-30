@@ -1,9 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "mkdir -p dist && cp server/simple-auth-server.cjs dist/server.js && echo 'Simple CommonJS server ready for Railway'"
+buildCommand = "npm install && npx vite build && mkdir -p dist && cp server/railway-fixed.cjs dist/server.cjs && cp -r dist/public dist/ && echo 'Railway build complete'"
 
 [deploy]
-startCommand = "NODE_ENV=production node dist/server.js"
+startCommand = "NODE_ENV=production node dist/server.cjs"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 healthcheckInterval = 30

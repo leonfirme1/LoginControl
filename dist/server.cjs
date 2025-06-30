@@ -2,6 +2,8 @@ const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
 
+console.log('🚀 Iniciando servidor Railway...');
+
 // Configuração do banco PostgreSQL AWS RDS
 const pool = new Pool({
   host: 'controlehoras-db.c8pqeqc0u2u5.us-east-1.rds.amazonaws.com',
@@ -11,8 +13,20 @@ const pool = new Pool({
   password: process.env.PGPASSWORD,
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  max: 3,
+  connectionTimeoutMillis: 3000
 });
+
+// Teste de conexão na inicialização
+pool.connect()
+  .then(client => {
+    console.log('✅ PostgreSQL conectado');
+    client.release();
+  })
+  .catch(err => {
+    console.error('❌ Erro PostgreSQL:', err.message);
+  });
 
 // Função para buscar usuário no banco
 async function getUserFromDatabase(username, password) {
@@ -23,14 +37,14 @@ async function getUserFromDatabase(username, password) {
     );
     
     if (result.rows.length > 0) {
-      console.log('✅ Usuário autenticado:', result.rows[0]);
+      console.log('✅ Login OK:', result.rows[0].name);
       return result.rows[0];
     } else {
-      console.log('❌ Credenciais inválidas para usuário:', username);
+      console.log('❌ Login falhou:', username);
       return null;
     }
   } catch (error) {
-    console.error('❌ Erro consulta banco:', error.message);
+    console.error('❌ Erro banco:', error.message);
     return null;
   }
 }
@@ -43,11 +57,11 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS simples
+// CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -56,13 +70,13 @@ app.use((req, res, next) => {
   }
 });
 
-// Log todas as requisições
+// Log requests
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 
-// Health check
+// Health check para Railway
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
@@ -70,56 +84,46 @@ app.get('/health', (req, res) => {
 // Endpoint de login
 app.post('/api/login', async (req, res) => {
   try {
-    console.log('📝 Tentativa de login:', req.body);
     const { username, password } = req.body;
     
     if (!username || !password) {
-      console.log('❌ Dados incompletos');
-      return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+      return res.status(400).json({ error: 'Dados obrigatórios' });
     }
     
     const user = await getUserFromDatabase(username, password);
     
     if (user) {
-      console.log('✅ Login bem-sucedido para:', username);
       res.json({ 
         success: true, 
-        message: 'Login realizado com sucesso',
+        message: 'Login OK',
         user: { id: user.id, name: user.name }
       });
     } else {
-      console.log('❌ Login falhou para:', username);
       res.status(401).json({ error: 'Credenciais inválidas' });
     }
   } catch (error) {
-    console.error('❌ Erro no endpoint de login:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Erro login:', error);
+    res.status(500).json({ error: 'Erro servidor' });
   }
 });
 
-// Servir arquivos estáticos - Railway-compatible paths
-const publicPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, '../public') 
-  : path.join(__dirname, '../dist/public');
+// Servir frontend
+const staticPath = path.join(__dirname, 'public');
+app.use(express.static(staticPath));
 
-app.use(express.static(publicPath));
-
-// Fallback para SPA
+// SPA fallback
 app.get('*', (req, res) => {
-  const indexPath = process.env.NODE_ENV === 'production'
-    ? path.join(__dirname, '../public/index.html')
-    : path.join(__dirname, '../dist/public/index.html');
-  
+  const indexPath = path.join(staticPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      console.log('Erro ao servir index.html:', err);
-      res.status(500).send('Erro interno do servidor');
+      console.log('❌ Erro index.html:', err.message);
+      res.status(404).send('Página não encontrada');
     }
   });
 });
 
 // Iniciar servidor
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  console.log(`📊 Conectado ao PostgreSQL: controlehoras-db.c8pqeqc0u2u5.us-east-1.rds.amazonaws.com`);
+  console.log(`🌐 Servidor ativo na porta ${PORT}`);
+  console.log(`🔗 PostgreSQL: AWS RDS conectado`);
 });

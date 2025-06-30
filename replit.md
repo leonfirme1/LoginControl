@@ -110,7 +110,7 @@ NODE_ENV=production|development
 ## Recent Changes
 - **June 30, 2025**: Sistema de login configurado para AWS RDS PostgreSQL
   - Conexão com banco controlehoras-db.c8pqeqc0u2u5.us-east-1.rds.amazonaws.com
-  - Tabela "consultants" com campos "name" e "password"
+  - Tabela "consultants" com campos "id", "code", "name", "password"
   - Configuração para deploy no Railway com porta dinâmica
   - Health check endpoint melhorado: `/health` (simples) e `/health/detailed` (com teste de banco)
   - Configuração SSL otimizada para produção (rejectUnauthorized: false)
@@ -126,6 +126,10 @@ NODE_ENV=production|development
   - **AUTENTICAÇÃO REAL**: Login integrado com PostgreSQL AWS RDS
   - Conexão com tabela "consultants" funcionando
   - Validação de credenciais direto no banco de dados
+  - **CORREÇÃO ERRO 500**: Criado servidor CommonJS simplificado (simple-auth-server.cjs)
+  - Corrigido problema de ES modules conflitantes
+  - Sistema sempre busca dados atualizados do PostgreSQL
+  - 3 usuários cadastrados: "1"/"12345", "leon"/"teste", "leo"/"teste1"
 
 ## Deployment Configuration
 - **Target Platform**: Railway

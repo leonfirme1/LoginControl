@@ -1,10 +1,10 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "mkdir -p dist && cp server/railway-server.js dist/server.js && echo 'ES Module server ready for Railway'"
+buildCommand = "mkdir -p dist && cp server/simple-auth-server.cjs dist/server.js && echo 'Simple CommonJS server ready for Railway'"
 
 [deploy]
 startCommand = "NODE_ENV=production node dist/server.js"
-healthcheckPath = "/ping"
+healthcheckPath = "/health"
 healthcheckTimeout = 300
 healthcheckInterval = 30
 restartPolicyType = "ON_FAILURE"
